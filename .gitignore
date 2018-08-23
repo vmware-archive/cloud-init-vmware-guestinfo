@@ -1,1 +1,6 @@
 /rpmbuild/
+/test.py
+/net.1.config
+/metadata.json
+/test.sh
+/userdata.yaml
