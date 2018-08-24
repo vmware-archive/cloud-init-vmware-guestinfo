@@ -45,8 +45,8 @@ overrides any existing datasource selection with the VMX Guestinfo
 datasource:
 
 ```shell
-$ curl -sSLo /etc/cloud/cloud.cfg.d/10_vmx_guestinfo.cfg \
-  https://raw.githubusercontent.com/akutz/cloudinit-ds-vmx-guestinfo/master/10_vmx_guestinfo.cfg
+$ curl -sSLo /etc/cloud/cloud.cfg.d/99_vmx_guestinfo.cfg \
+  https://raw.githubusercontent.com/akutz/cloudinit-ds-vmx-guestinfo/master/99_vmx_guestinfo.cfg
 ```
 
 ## Configuration
@@ -208,6 +208,19 @@ enough to parse the data.
 The metadata key `network.encoding` may be used to indicate the
 format of the metadata key "network". Valid encodings are `base64`
 and `gzip+base64`.
+
+## Building the RPM
+Building the RPM locally is handled via Docker. Simple execute the following
+command:
+
+```shell
+$ make rpm
+```
+
+The resulting RPMs are located in `rpmbuild/$OS/RPMS/noarch/`. The list
+of supported `$OS` platforms are:
+
+* centos7
 
 ## Conclusion
 To learn more about how to use cloud-init with CentOS, please see the cloud-init
