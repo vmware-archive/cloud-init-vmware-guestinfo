@@ -33,5 +33,5 @@ exit 0
 
 %files
 %defattr(0644, root,root, 0755)
-/etc/cloud/cloud.cfg.d/10_vmx_guestinfo.cfg
+/etc/cloud/cloud.cfg.d/99_vmx_guestinfo.cfg
 /usr/lib/python2.7/site-packages/cloudinit/sources/DataSourceVmxGuestinfo.py
