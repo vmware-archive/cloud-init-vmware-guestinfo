@@ -9,7 +9,7 @@ There are multiple methods of installing the data source.
 There is an RPM available for installing on RedHat/CentOS:
 
 ```shell
-$ yum install https://s3-us-west-2.amazonaws.com/cnx.vmware/cicd/centos/cloud-init-vmx-guestinfo-1.0.0-0.noarch.rpm
+$ yum install https://github.com/akutz/cloudinit-ds-vmx-guestinfo/releases/download/v1.0.0/cloud-init-vmx-guestinfo-1.0.0-1.el7.noarch.rpm
 ```
 
 ### Installing on other Linux distributions
@@ -220,7 +220,7 @@ $ make rpm
 The resulting RPMs are located in `rpmbuild/$OS/RPMS/noarch/`. The list
 of supported `$OS` platforms are:
 
-* centos7
+* el7 (RHEL/CentOS 7)
 
 ## Conclusion
 To learn more about how to use cloud-init with CentOS, please see the cloud-init
