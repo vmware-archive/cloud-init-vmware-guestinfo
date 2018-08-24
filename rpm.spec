@@ -6,7 +6,7 @@
 # common
 #################################################################################
 Name:           cloud-init-vmx-guestinfo
-Version:        1.0.4
+Version:        1.0.0
 Release:        0
 Summary:        A cloud-init datasource that uses VMX Guestinfo
 License:        Apache2
