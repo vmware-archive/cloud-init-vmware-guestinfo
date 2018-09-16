@@ -11,12 +11,11 @@ rpm-el7:
 		-v $$(pwd)/rpmmacros:/root/.rpmmacros:ro \
 		-v $$(pwd)/rpmbuild/el7:/root/rpmbuild \
 		-v $$(pwd)/rpm.el7.spec:/root/rpmbuild/SPECS/rpm.spec:ro \
-		-v $$(pwd)/99_vmx_guestinfo.cfg:/root/rpmbuild/BUILD/etc/cloud/cloud.cfg.d/99_vmx_guestinfo.cfg:ro \
-		-v $$(pwd)/DataSourceVmxGuestinfo.py:/root/rpmbuild/BUILD/usr/lib/python2.7/site-packages/cloudinit/sources/DataSourceVmxGuestinfo.py:ro \
+		-v $$(pwd)/99-DataSourceVMwareGuestInfo.cfg:/root/rpmbuild/BUILD/etc/cloud/cloud.cfg.d/99-DataSourceVMwareGuestInfo.cfg:ro \
+		-v $$(pwd)/DataSourceVMwareGuestInfo.py:/root/rpmbuild/BUILD/usr/lib/python2.7/site-packages/cloudinit/sources/DataSourceVMwareGuestInfo.py:ro \
 		rpmbuild:el7 \
 		rpmbuild -ba /root/rpmbuild/SPECS/rpm.spec
 
 rpm: rpm-el7
 
 build: rpm
-

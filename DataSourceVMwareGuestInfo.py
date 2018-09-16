@@ -1,6 +1,6 @@
 # vi: ts=4 expandtab
 #
-# Copyright (C) 2017 VMware Inc.
+# Copyright (C) 2018 VMware Inc.
 #
 # Authors: Anish Swaminathan <anishs@vmware.com>
 #          Andrew Kutz <akutz@vmware.com>
@@ -19,8 +19,15 @@ from distutils.spawn import find_executable
 
 LOG = logging.getLogger(__name__)
 
-# Used with CentOS 7 which installs cloud-init 0.7.9. The URL for
-# the DataSource class is http://bit.ly/cloudinit-datasource-0-7-9.
+# This cloud-init datasource was designed for use with CentOS 7,
+# which uses cloud-init 0.7.9. However, this datasource should
+# work with any Linux distribution for which cloud-init is 
+# avaialble.
+#
+# The documentation for cloud-init 0.7.9's datasource is 
+# available at http://bit.ly/cloudinit-datasource-0-7-9. The
+# current documentation for cloud-init is found at
+# https://cloudinit.readthedocs.io/en/latest/.
 #
 # Setting the hostname:
 #     The hostname is set by way of the metadata key "local-hostname".
@@ -47,7 +54,7 @@ LOG = logging.getLogger(__name__)
 #     The metadata key "network.encoding" may be used to indicate the
 #     format of the metadata key "network". Valid encodings are base64
 #     and gzip+base64.
-class DataSourceVmxGuestinfo(sources.DataSource):
+class DataSourceVMwareGuestInfo(sources.DataSource):
     def __init__(self, sys_cfg, distro, paths, ud_proc=None):
         sources.DataSource.__init__(self, sys_cfg, distro, paths, ud_proc)
         self.vmtoolsd = find_executable("vmtoolsd")
@@ -143,4 +150,4 @@ def get_datasource_list(depends):
     """
     Return a list of data sources that match this set of dependencies
     """
-    return [DataSourceVmxGuestinfo]
+    return [DataSourceVMwareGuestInfo]

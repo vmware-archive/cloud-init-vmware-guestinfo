@@ -1,6 +1,6 @@
-# Cloud-Init Datasource for VMware VMX Guestinfo
+# Cloud-Init Datasource for VMware GuestInfo
 This project provides a cloud-init datasource for pulling meta,
-user, and vendor data from VMware's VMX Guestinfo interface.
+user, and vendor data from VMware vSphere's GuestInfo interface.
 
 ## Installation
 There are multiple methods of installing the data source.
@@ -9,44 +9,15 @@ There are multiple methods of installing the data source.
 There is an RPM available for installing on RedHat/CentOS:
 
 ```shell
-$ yum install https://github.com/akutz/cloudinit-ds-vmx-guestinfo/releases/download/v1.0.0/cloud-init-vmx-guestinfo-1.0.0-1.el7.noarch.rpm
+$ yum install https://github.com/akutz/cloud-init-vmware-guestinfo/releases/download/v1.0.0/cloud-init-vmware-guestinfo-1.0.0-1.el7.noarch.rpm
 ```
 
 ### Installing on other Linux distributions
-The VMX Guestinfo datasource can be installed on any Linux distribution
-where cloud-init is already present. To do so, please follow these steps:
-
-1. Find the path to the `cloudinit/sources` Python package:
-```shell
-$ PY_SCRIPT='import os; from cloudinit import sources; print(os.path.dirname(sources.__file__));'
-$ CLOUDINIT_SOURCES=$(python -c ''"${PY_SCRIPT}"'' 2>/dev/null || python3 -c ''"${PY_SCRIPT}"'')
-```
-
-2. Verify `CLOUDINIT_SOURCES` is set to a valid path. If it isn't, then
-cloud-init is likely not installed and these instructions should be
-aborted.
-```shell
-$ [ -n "${CLOUDINIT_SOURCES}" ] || echo "cloud-init not found"
-```
-
-3. Write `DataSourceVmxGuestinfo.py` to `$CLOUDINIT_SOURCES`:
-```shell
-$ curl -sSLo "${CLOUDINIT_SOURCES}/DataSourceVmxGuestinfo.py" \
-  https://raw.githubusercontent.com/akutz/cloudinit-ds-vmx-guestinfo/master/DataSourceVmxGuestinfo.py
-```
-
-4. Update the list of available datasources. This step can vary based on
-the Linux distribution. On Ubuntu 14.04 LTS (Trusty) the file
-`/etc/cloud.cfg.d/90_dpkg.cfg` contains the list of datasources that 
-needs to be amended to include `VmxGuestinfo`. On Ubuntu 18.04 (Bionic)
-and other Linux distributions this file may not be present. In those cases
-use the following command to add a configuration file to cloud-init that
-overrides any existing datasource selection with the VMX Guestinfo
-datasource:
+The VMware GuestInfo datasource can be installed on any Linux distribution
+where cloud-init is already present. To do so, simply execute the following:
 
 ```shell
-$ curl -sSLo /etc/cloud/cloud.cfg.d/99_vmx_guestinfo.cfg \
-  https://raw.githubusercontent.com/akutz/cloudinit-ds-vmx-guestinfo/master/99_vmx_guestinfo.cfg
+$ curl -sSL https://raw.githubusercontent.com/akutz/cloud-init-vmware-guestinfo/master/install.sh | sh -
 ```
 
 ## Configuration
@@ -67,7 +38,7 @@ All `guestinfo.*.encoding` property values may be set to `base64` or
 
 ## Walkthrough
 The following series of steps is a demonstration on how to configure a VM
-with cloud-init and the VMX Guestinfo datasource.
+with cloud-init and the VMX GuestInfo datasource.
 
 ### Create a network configuration file
 First, create the network configuration for the VM. Save the following 
@@ -130,7 +101,7 @@ users:
       - ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAACAQDE0c5FczvcGSh/tG4iw+Fhfi/O5/EvUM/96js65tly4++YTXK1d9jcznPS5ruDlbIZ30oveCBd3kT8LLVFwzh6hepYTf0YmCTpF4eDunyqmpCXDvVscQYRXyasEm5olGmVe05RrCJSeSShAeptv4ueIn40kZKOghinGWLDSZG4+FFfgrmcMCpx5YSCtX2gvnEYZJr0czt4rxOZuuP7PkJKgC/mt2PcPjooeX00vAj81jjU2f3XKrjjz2u2+KIt9eba+vOQ6HiC8c2IzRkUAJ5i1atLy8RIbejo23+0P4N2jjk17QySFOVHwPBDTYb0/0M/4ideeU74EN/CgVsvO6JrLsPBR4dojkV5qNbMNxIVv5cUwIy2ThlLgqpNCeFIDLCWNZEFKlEuNeSQ2mPtIO7ETxEL2Cz5y/7AIuildzYMc6wi2bofRC8HmQ7rMXRWdwLKWsR0L7SKjHblIwarxOGqLnUI+k2E71YoP7SZSlxaKi17pqkr0OMCF+kKqvcvHAQuwGqyumTEWOlH6TCx1dSPrW+pVCZSHSJtSTfDW2uzL6y8k10MT06+pVunSrWo5LHAXcS91htHV1M1UrH/tZKSpjYtjMb5+RonfhaFRNzvj7cCE1f3Kp8UVqAdcGBTtReoE8eRUT63qIxjw03a7VwAyB2w+9cu1R9/vAo8SBeRqw== sakutz@gmail.com
 ```
 
-### Assigning the cloud-config data to the VM's Guestinfo
+### Assigning the cloud-config data to the VM's GuestInfo
 Please note that this step requires that the VM be powered off. All of
 the commands below use the VMware CLI tool, 
 [`govc`](https://github.com/vmware/govmomi/blob/master/govc).
@@ -170,7 +141,7 @@ the data for cloud-init. Valid values for `metadata.encoding` and
 * `base64`
 * `gzip+base64`
 
-### Using the cloud-init VMX Guestinfo datasource
+### Using the cloud-init VMX GuestInfo datasource
 Power the VM back on.
 ```shell
 $ govc vm.power -vm "${VM}" -on

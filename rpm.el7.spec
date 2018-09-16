@@ -1,14 +1,14 @@
 #
-# spec file for package cloud-init-vmx-guestinfo
+# spec file for package cloud-init-vmware-guestinfo
 #
 
 #################################################################################
 # common
 #################################################################################
-Name:           cloud-init-vmx-guestinfo
+Name:           cloud-init-vmware-guestinfo
 Version:        1.0.0
 Release:        1.el7
-Summary:        A cloud-init datasource that uses VMX Guestinfo
+Summary:        A cloud-init datasource that uses VMware GuestInfo
 License:        Apache2
 Requires:       cloud-init
 Group:          Applications/System
@@ -18,7 +18,7 @@ BuildArch:      noarch
 # specific
 #################################################################################
 %description
-A cloud-init datasource that uses VMX Guestinfo
+A cloud-init datasource that uses VMware GuestInfo
 
 %prep
 
@@ -33,5 +33,5 @@ exit 0
 
 %files
 %defattr(0644, root,root, 0755)
-/etc/cloud/cloud.cfg.d/99_vmx_guestinfo.cfg
-/usr/lib/python2.7/site-packages/cloudinit/sources/DataSourceVmxGuestinfo.py
+/etc/cloud/cloud.cfg.d/99-DataSourceVMwareGuestInfo.cfg
+/usr/lib/python2.7/site-packages/cloudinit/sources/DataSourceVMwareGuestInfo.py
