@@ -1,6 +1,6 @@
 # Cloud-Init Datasource for VMware GuestInfo
 This project provides a cloud-init datasource for pulling meta,
-user, and vendor data from VMware vSphere's GuestInfo interface.
+user, and vendor data from VMware vSphere's GuestInfo [interface](https://github.com/vmware/govmomi/blob/master/govc/USAGE.md#vmchange).
 
 ## Installation
 There are multiple methods of installing the data source.
