@@ -125,6 +125,34 @@ class DataSourceVMwareGuestInfo(sources.DataSource):
         return self._get_encoded_data('metadata.' + key, enc_type, data)
 
     def _get_encoded_data(self, key, enc_type, data):
+        '''
+        The _get_encoded_data would always return a str
+        ----
+        In py 2.7:
+        json.loads method takes string as input
+        zlib.decompress takes and returns a string
+        base64.b64decode takes and returns a string
+        -----
+        In py 3.6 and newer:
+        json.loads method takes bytes or string as input
+        zlib.decompress takes and returns a bytes
+        base64.b64decode takes bytes or string and returns bytes
+        -----
+        In py > 3, < 3.6:
+        json.loads method takes string as input
+        zlib.decompress takes and returns a bytes
+        base64.b64decode takes bytes or string and returns bytes
+        -----
+        Given the above conditions the output from zlib.decompress and
+        base64.b64decode would be bytes with newer python and str in older
+        version. Thus we would covert the output to str before returning
+        '''
+        rawdata = self._get_encoded_data_raw(key, enc_type, data)
+        if type(rawdata) == bytes:
+            return rawdata.decode('utf-8')
+        return rawdata
+
+    def _get_encoded_data_raw(self, key, enc_type, data):
         LOG.debug("Getting encoded data for key=%s, enc=%s", key, enc_type)
         if enc_type == "gzip+base64" or enc_type == "gz+b64":
             LOG.debug("Decoding %s format %s", enc_type, key)
