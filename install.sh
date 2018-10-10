@@ -27,8 +27,8 @@ curl -sSL -o "${CLOUD_INIT_SOURCES}/DataSourceVMwareGuestInfo.py" \
   "${REPO_SLUG}/${GIT_REF}/DataSourceVMwareGuestInfo.py"
 
 # Add the configuration file that tells cloud-init what datasource to use.
-mkdir -p /etc/cloud.cfg.d
-curl -sSL -o /etc/cloud.cfg.d/99-DataSourceVMwareGuestInfo.cfg \
+mkdir -p /etc/cloud/cloud.cfg.d
+curl -sSL -o /etc/cloud/cloud.cfg.d/99-DataSourceVMwareGuestInfo.cfg \
   "${REPO_SLUG}/${GIT_REF}/99-DataSourceVMwareGuestInfo.cfg"
 
 echo "So long, and thanks for all the fish."
