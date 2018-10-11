@@ -9,7 +9,7 @@ There are multiple methods of installing the data source.
 There is an RPM available for installing on RedHat/CentOS:
 
 ```shell
-$ yum install https://github.com/akutz/cloud-init-vmware-guestinfo/releases/download/v1.0.0/cloud-init-vmware-guestinfo-1.0.0-1.el7.noarch.rpm
+$ yum install https://github.com/akutz/cloud-init-vmware-guestinfo/releases/download/v1.1.0/cloud-init-vmware-guestinfo-1.1.0-1.el7.noarch.rpm
 ```
 
 ### Installing on other Linux distributions
