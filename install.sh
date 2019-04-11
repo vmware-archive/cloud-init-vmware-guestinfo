@@ -5,6 +5,15 @@
 #        curl -sSL https://raw.githubusercontent.com/akutz/cloud-init-vmware-guestinfo/master/install.sh | sh -
 #
 
+# Configure path for cloud-init configuration
+if [ "$(uname)" = "Linux" ]; then
+  CLOUD_CONFIG_DIR=/etc/cloud
+elif [ "$(uname)" = "FreeBSD" ]; then
+  CLOUD_CONFIG_DIR=/usr/local/etc/cloud
+else
+  echo "unknown os" 1>&2 && exit 1
+fi
+
 # The script to lookup the path to the cloud-init's datasource directory, "sources".
 PY_SCRIPT='import os; from cloudinit import sources; print(os.path.dirname(sources.__file__));'
 
@@ -27,8 +36,8 @@ curl -sSL -o "${CLOUD_INIT_SOURCES}/DataSourceVMwareGuestInfo.py" \
   "${REPO_SLUG}/${GIT_REF}/DataSourceVMwareGuestInfo.py"
 
 # Add the configuration file that tells cloud-init what datasource to use.
-mkdir -p /etc/cloud/cloud.cfg.d
-curl -sSL -o /etc/cloud/cloud.cfg.d/99-DataSourceVMwareGuestInfo.cfg \
+mkdir -p ${CLOUD_CONFIG_DIR}/cloud.cfg.d
+curl -sSL -o ${CLOUD_CONFIG_DIR}/cloud.cfg.d/99-DataSourceVMwareGuestInfo.cfg \
   "${REPO_SLUG}/${GIT_REF}/99-DataSourceVMwareGuestInfo.cfg"
 
 echo "So long, and thanks for all the fish."
