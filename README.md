@@ -120,7 +120,7 @@ Export the environment variables that contain the cloud-init metadata
 and cloud-config:
 ```shell
 $ export CLOUD_CONFIG=$(gzip -c9 <cloud-config.yaml | base64)
-$ export METADATA=$(sed 's~NETWORK_CONFIG~'"$(gzip -c9 <network-config.yaml | \
+$ export METADATA=$(sed 's~NETWORK_CONFIG~'"$(gzip -c9 <network.config.yaml | \
                     base64)"'~' <metadata.json | gzip -9 | base64)
 ```
 
