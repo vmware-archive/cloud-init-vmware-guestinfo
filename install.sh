@@ -5,6 +5,11 @@
 #        curl -sSL https://raw.githubusercontent.com/akutz/cloud-init-vmware-guestinfo/master/install.sh | sh -
 #
 
+if ! command -v curl >/dev/null 2>&1; then
+  echo "curl is required" 1>&2
+  exit 1
+fi
+
 # The script to lookup the path to the cloud-init's datasource directory, "sources".
 PY_SCRIPT='import os; from cloudinit import sources; print(os.path.dirname(sources.__file__));'
 
