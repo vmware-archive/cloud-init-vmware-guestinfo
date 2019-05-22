@@ -36,4 +36,10 @@ mkdir -p /etc/cloud/cloud.cfg.d
 curl -sSL -o /etc/cloud/cloud.cfg.d/99-DataSourceVMwareGuestInfo.cfg \
   "${REPO_SLUG}/${GIT_REF}/99-DataSourceVMwareGuestInfo.cfg"
 
+# Download program used by ds-identify to determine wheether or not the
+# VMwareGuestInfo datasource is useable.
+curl -sSL -o "/usr/local/bin/dscheck_VMwareGuestInfo" \
+  "${REPO_SLUG}/${GIT_REF}/dscheck_VMwareGuestInfo.sh"
+chmod 0755 "/usr/local/bin/dscheck_VMwareGuestInfo"
+
 echo "So long, and thanks for all the fish."
