@@ -31,10 +31,10 @@ LOG = logging.getLogger(__name__)
 
 # This cloud-init datasource was designed for use with CentOS 7,
 # which uses cloud-init 0.7.9. However, this datasource should
-# work with any Linux distribution for which cloud-init is 
+# work with any Linux distribution for which cloud-init is
 # avaialble.
 #
-# The documentation for cloud-init 0.7.9's datasource is 
+# The documentation for cloud-init 0.7.9's datasource is
 # available at http://bit.ly/cloudinit-datasource-0-7-9. The
 # current documentation for cloud-init is found at
 # https://cloudinit.readthedocs.io/en/latest/.
@@ -79,7 +79,10 @@ class DataSourceVMwareGuestInfo(sources.DataSource):
         # Get the JSON metadata. Can be plain-text, base64, or gzip+base64.
         metadata = self._get_encoded_guestinfo_data('metadata')
         if metadata:
-            self.metadata = json.loads(metadata)
+            try:
+                self.metadata = json.loads(metadata)
+            except:
+                self.metadata = safeyaml.load(metadata)
 
         # Get the YAML userdata. Can be plain-text, base64, or gzip+base64.
         self.userdata_raw = self._get_encoded_guestinfo_data('userdata')
