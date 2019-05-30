@@ -13,7 +13,7 @@
 # file.
 
 #
-# This file should be installed to /usr/local/bin/dscheck_VMwareGuestInfo
+# This file should be installed to /usr/bin/dscheck_VMwareGuestInfo
 # without the ".sh" extension. The extension only exists to make it easier
 # to identify the file during development.
 #
