@@ -318,19 +318,18 @@ def get_default_ip_addrs():
     gw4 = default_gw.get(netifaces.AF_INET)
     if gw4:
         _, dev4 = gw4
-        addr_fams = netifaces.ifaddresses(dev4)
-        if addr_fams:
-            af_inet = addr_fams.get(netifaces.AF_INET)
-            if af_inet:
-                if len(af_inet) > 1:
+        addr4_fams = netifaces.ifaddresses(dev4)
+        if addr4_fams:
+            af_inet4 = addr4_fams.get(netifaces.AF_INET)
+            if af_inet4:
+                if len(af_inet4) > 1:
                     LOG.warn(
-                        "device %s has more than one ipv4 address: %s", dev4, af_inet)
-                elif 'addr' in af_inet[0]:
-                    ipv4 = af_inet[0]['addr']
+                        "device %s has more than one ipv4 address: %s", dev4, af_inet4)
+                elif 'addr' in af_inet4[0]:
+                    ipv4 = af_inet4[0]['addr']
 
     # Try to get the default IPv6 address by first seeing if there is a default
-    # IPv6 route. If there isn't then see if there is a single IPv6 address
-    # associated with the same device associated with the default IPv4 address.
+    # IPv6 route.
     gw6 = default_gw.get(netifaces.AF_INET6)
     if gw6:
         _, dev6 = gw6
@@ -343,14 +342,30 @@ def get_default_ip_addrs():
                         "device %s has more than one ipv6 address: %s", dev6, af_inet6)
                 elif 'addr' in af_inet6[0]:
                     ipv6 = af_inet6[0]['addr']
-    elif addr_fams:
-        af_inet6 = addr_fams.get(netifaces.AF_INET6)
+
+    # If there is a default IPv4 address but not IPv6, then see if there is a
+    # single IPv6 address associated with the same device associated with the
+    # default IPv4 address.
+    if ipv4 and not ipv6:
+        af_inet6 = addr4_fams.get(netifaces.AF_INET6)
         if af_inet6:
             if len(af_inet6) > 1:
                 LOG.warn(
                     "device %s has more than one ipv6 address: %s", dev4, af_inet6)
             elif 'addr' in af_inet6[0]:
                 ipv6 = af_inet6[0]['addr']
+
+    # If there is a default IPv6 address but not IPv4, then see if there is a
+    # single IPv4 address associated with the same device associated with the
+    # default IPv6 address.
+    if not ipv4 and ipv6:
+        af_inet4 = addr6_fams.get(netifaces.AF_INET4)
+        if af_inet4:
+            if len(af_inet4) > 1:
+                LOG.warn(
+                    "device %s has more than one ipv4 address: %s", dev6, af_inet4)
+            elif 'addr' in af_inet4[0]:
+                ipv4 = af_inet4[0]['addr']
 
     return ipv4, ipv6
 
@@ -389,7 +404,7 @@ def get_host_info():
     for dev_name in ifaces:
         addr_fams = netifaces.ifaddresses(dev_name)
         af_link = addr_fams.get(netifaces.AF_LINK)
-        af_inet = addr_fams.get(netifaces.AF_INET)
+        af_inet4 = addr_fams.get(netifaces.AF_INET)
         af_inet6 = addr_fams.get(netifaces.AF_INET6)
 
         mac = None
@@ -400,17 +415,17 @@ def get_host_info():
         if mac == "00:00:00:00:00:00":
             continue
 
-        if mac and (af_inet or af_inet6):
+        if mac and (af_inet4 or af_inet6):
             key = mac
             val = {}
-            if af_inet:
-                val["ipv4"] = af_inet
+            if af_inet4:
+                val["ipv4"] = af_inet4
             if af_inet6:
                 val["ipv6"] = af_inet6
             by_mac[key] = val
 
-        if af_inet:
-            for ip_info in af_inet:
+        if af_inet4:
+            for ip_info in af_inet4:
                 key = ip_info['addr']
                 if key == '127.0.0.1':
                     continue

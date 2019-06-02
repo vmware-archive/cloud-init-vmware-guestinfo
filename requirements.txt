@@ -1,2 +1,2 @@
-deepmerge
-netifaces
+deepmerge >= 0.0.5
+netifaces >= 0.10.9
