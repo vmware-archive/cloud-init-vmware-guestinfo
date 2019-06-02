@@ -18,16 +18,20 @@
 A cloud init datasource for VMware GuestInfo.
 '''
 
-import collections
 import base64
-import zlib
-import json
+import collections
 from distutils.spawn import find_executable
+import json
+import socket
+import zlib
 
 from cloudinit import log as logging
 from cloudinit import sources
 from cloudinit import util
 from cloudinit import safeyaml
+
+from deepmerge import always_merger
+import netifaces
 
 LOG = logging.getLogger(__name__)
 NOVAL = "No value found"
@@ -123,20 +127,14 @@ class DataSourceVMwareGuestInfo(sources.DataSource):
         brought up the OS at this point.
         """
 
-        # Set the hostname.
-        hostname = self.metadata.get('local-hostname')
-        if hostname:
-            self.distro.set_hostname(hostname)
-            LOG.info("set hostname %s", hostname)
-
-        # Update the metadata with the actual host name and actual network
-        # interface information.
+        # Get information about the host.
         host_info = get_host_info()
         LOG.info("got host-info: %s", host_info)
-        hostname = host_info.get('local-hostname', hostname)
-        self.metadata['local-hostname'] = hostname
-        interfaces = host_info['network']['interfaces']
-        self.metadata['network']['interfaces'] = interfaces
+
+        # Ensure the metadata gets updated with information about the
+        # host, including the network interfaces, default IP addresses,
+        # etc.
+        self.metadata = always_merger.merge(self.metadata, host_info)
 
         # Persist the instance data for versions of cloud-init that support
         # doing so. This occurs here rather than in the get_data call in
@@ -298,36 +296,115 @@ def get_datasource_list(depends):
     return [DataSourceVMwareGuestInfo]
 
 
+def get_default_ip_addrs():
+    '''
+    Returns the default IPv4 and IPv6 addresses based on the device(s) used for
+    the default route. Please note that None may be returned for either address
+    family if that family has no default route or if there are multiple
+    addresses associated with the device used by the default route for a given
+    address.
+    '''
+    gateways = netifaces.gateways()
+    if 'default' not in gateways:
+        return None, None
+
+    default_gw = gateways['default']
+    if netifaces.AF_INET not in default_gw and netifaces.AF_INET6 not in default_gw:
+        return None, None
+
+    ipv4 = None
+    ipv6 = None
+
+    gw4 = default_gw.get(netifaces.AF_INET)
+    if gw4:
+        _, dev4 = gw4
+        addr4_fams = netifaces.ifaddresses(dev4)
+        if addr4_fams:
+            af_inet4 = addr4_fams.get(netifaces.AF_INET)
+            if af_inet4:
+                if len(af_inet4) > 1:
+                    LOG.warn(
+                        "device %s has more than one ipv4 address: %s", dev4, af_inet4)
+                elif 'addr' in af_inet4[0]:
+                    ipv4 = af_inet4[0]['addr']
+
+    # Try to get the default IPv6 address by first seeing if there is a default
+    # IPv6 route.
+    gw6 = default_gw.get(netifaces.AF_INET6)
+    if gw6:
+        _, dev6 = gw6
+        addr6_fams = netifaces.ifaddresses(dev6)
+        if addr6_fams:
+            af_inet6 = addr6_fams.get(netifaces.AF_INET6)
+            if af_inet6:
+                if len(af_inet6) > 1:
+                    LOG.warn(
+                        "device %s has more than one ipv6 address: %s", dev6, af_inet6)
+                elif 'addr' in af_inet6[0]:
+                    ipv6 = af_inet6[0]['addr']
+
+    # If there is a default IPv4 address but not IPv6, then see if there is a
+    # single IPv6 address associated with the same device associated with the
+    # default IPv4 address.
+    if ipv4 and not ipv6:
+        af_inet6 = addr4_fams.get(netifaces.AF_INET6)
+        if af_inet6:
+            if len(af_inet6) > 1:
+                LOG.warn(
+                    "device %s has more than one ipv6 address: %s", dev4, af_inet6)
+            elif 'addr' in af_inet6[0]:
+                ipv6 = af_inet6[0]['addr']
+
+    # If there is a default IPv6 address but not IPv4, then see if there is a
+    # single IPv4 address associated with the same device associated with the
+    # default IPv6 address.
+    if not ipv4 and ipv6:
+        af_inet4 = addr6_fams.get(netifaces.AF_INET4)
+        if af_inet4:
+            if len(af_inet4) > 1:
+                LOG.warn(
+                    "device %s has more than one ipv4 address: %s", dev6, af_inet4)
+            elif 'addr' in af_inet4[0]:
+                ipv4 = af_inet4[0]['addr']
+
+    return ipv4, ipv6
+
+
 def get_host_info():
     '''
     Returns host information such as the host name and network interfaces.
     '''
-    import netifaces
-    import socket
 
     host_info = {
         'network': {
             'interfaces': {
                 'by-mac': collections.OrderedDict(),
-                'by-ip4': collections.OrderedDict(),
-                'by-ip6': collections.OrderedDict(),
+                'by-ipv4': collections.OrderedDict(),
+                'by-ipv6': collections.OrderedDict(),
             },
         },
     }
 
     hostname = socket.getfqdn()
     if hostname:
+        host_info['hostname'] = hostname
         host_info['local-hostname'] = hostname
 
+    default_ipv4, default_ipv6 = get_default_ip_addrs()
+    if default_ipv4:
+        host_info['local-ipv4'] = default_ipv4
+    if default_ipv6:
+        host_info['local-ipv6'] = default_ipv6
+
     by_mac = host_info['network']['interfaces']['by-mac']
-    by_ip4 = host_info['network']['interfaces']['by-ip4']
-    by_ip6 = host_info['network']['interfaces']['by-ip6']
+    by_ipv4 = host_info['network']['interfaces']['by-ipv4']
+    by_ipv6 = host_info['network']['interfaces']['by-ipv6']
 
     ifaces = netifaces.interfaces()
     for dev_name in ifaces:
         addr_fams = netifaces.ifaddresses(dev_name)
         af_link = addr_fams.get(netifaces.AF_LINK)
-        af_inet = addr_fams.get(netifaces.AF_INET)
+        af_inet4 = addr_fams.get(netifaces.AF_INET)
         af_inet6 = addr_fams.get(netifaces.AF_INET6)
 
         mac = None
@@ -338,37 +415,51 @@ def get_host_info():
         if mac == "00:00:00:00:00:00":
             continue
 
-        if mac and (af_inet or af_inet6):
+        if mac and (af_inet4 or af_inet6):
             key = mac
             val = {}
-            if af_inet:
-                val["ip4"] = af_inet
+            if af_inet4:
+                val["ipv4"] = af_inet4
             if af_inet6:
-                val["ip6"] = af_inet6
+                val["ipv6"] = af_inet6
             by_mac[key] = val
 
-        if af_inet:
-            for ip_info in af_inet:
+        if af_inet4:
+            for ip_info in af_inet4:
                 key = ip_info['addr']
+                if key == '127.0.0.1':
+                    continue
                 val = ip_info.copy()
                 del val['addr']
                 if mac:
                     val['mac'] = mac
-                by_ip4[key] = val
+                by_ipv4[key] = val
 
         if af_inet6:
             for ip_info in af_inet6:
                 key = ip_info['addr']
+                if key == '::1':
+                    continue
                 val = ip_info.copy()
                 del val['addr']
                 if mac:
                     val['mac'] = mac
-                by_ip6[key] = val
+                by_ipv6[key] = val
 
     return host_info
 
 
+def main():
+    '''
+    Executed when this file is used as a program.
+    '''
+    metadata = {'network': {'config': {'dhcp': True}}}
+    host_info = get_host_info()
+    metadata = always_merger.merge(metadata, host_info)
+    print(util.json_dumps(metadata))
+
+
 if __name__ == "__main__":
-    print util.json_dumps(get_host_info())
+    main()
 
 # vi: ts=4 expandtab
