@@ -20,6 +20,7 @@ A cloud init datasource for VMware GuestInfo.
 
 import base64
 import collections
+import copy
 from distutils.spawn import find_executable
 import json
 import socket
@@ -266,6 +267,7 @@ def load_metadata():
     decoding the network config when required
     '''
     data = load(guestinfo('metadata'))
+    LOG.debug('loaded metadata %s', data)
 
     network = None
     if 'network' in data:
@@ -278,12 +280,20 @@ def load_metadata():
         del data['network.encoding']
 
     if network:
-        if not isinstance(network, collections.Mapping):
-            LOG.debug("decoding network data: %s", network)
+        LOG.debug('network data found')
+        if isinstance(network, collections.Mapping):
+            LOG.debug("network data copied to 'config' key")
+            network = {
+                'config': copy.deepcopy(network)
+            }
+        else:
+            LOG.debug("network data to be decoded %s", network)
             dec_net = decode('metadata.network', network_enc, network)
-            network = load(dec_net)
-        if 'config' not in network:
-            raise NetworkConfigError("missing 'config' key")
+            network = {
+                'config': load(dec_net),
+            }
+
+        LOG.debug('network data %s', network)
         data['network'] = network
 
     return data
@@ -429,7 +439,7 @@ def get_host_info():
                 key = ip_info['addr']
                 if key == '127.0.0.1':
                     continue
-                val = ip_info.copy()
+                val = copy.deepcopy(ip_info)
                 del val['addr']
                 if mac:
                     val['mac'] = mac
@@ -440,7 +450,7 @@ def get_host_info():
                 key = ip_info['addr']
                 if key == '::1':
                     continue
-                val = ip_info.copy()
+                val = copy.deepcopy(ip_info)
                 del val['addr']
                 if mac:
                     val['mac'] = mac
