@@ -14,7 +14,9 @@ $ yum install https://github.com/vmware/cloud-init-vmware-guestinfo/releases/dow
 
 ### Installing on other Linux distributions
 The VMware GuestInfo datasource can be installed on any Linux distribution
-where cloud-init is already present. To do so, simply execute the following:
+where cloud-init is already present.
+Further, Python and pip are required (version 2 or 3).
+To do so, simply execute the following:
 
 ```shell
 $ curl -sSL https://raw.githubusercontent.com/vmware/cloud-init-vmware-guestinfo/master/install.sh | sh -
