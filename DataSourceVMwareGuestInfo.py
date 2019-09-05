@@ -116,7 +116,10 @@ class DataSourceVMwareGuestInfo(sources.DataSource):
         # Get the vendor data.
         self.vendordata_raw = guestinfo('vendordata')
 
-        return True
+        if self.metadata or self.userdata_raw or self.vendordata_raw:
+            return True
+        else:
+            return False
 
     def setup(self, is_new_instance):
         """setup(is_new_instance)
@@ -379,6 +382,24 @@ def get_default_ip_addrs():
 
     return ipv4, ipv6
 
+# patched socket.getfqdn() - see https://bugs.python.org/issue5004
+def getfqdn(name=''):
+    """Get fully qualified domain name from name.
+     An empty argument is interpreted as meaning the local host.
+    """
+    name = name.strip()
+    if not name or name == '0.0.0.0':
+        name = socket.gethostname()
+    try:
+        addrs = socket.getaddrinfo(name, None, 0, socket.SOCK_DGRAM, 0, socket.AI_CANONNAME)
+    except socket.error:
+        pass
+    else:
+        for addr in addrs:
+            if addr[3]:
+                name = addr[3]
+                break
+    return name
 
 def get_host_info():
     '''
@@ -395,7 +416,7 @@ def get_host_info():
         },
     }
 
-    hostname = socket.getfqdn()
+    hostname = getfqdn(socket.gethostname())
     if hostname:
         host_info['hostname'] = hostname
         host_info['local-hostname'] = hostname
