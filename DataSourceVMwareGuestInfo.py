@@ -166,7 +166,7 @@ class DataSourceVMwareGuestInfo(sources.DataSource):
         if self.metadata and 'instance-id' in self.metadata:
             return self.metadata['instance-id']
         with open('/sys/class/dmi/id/product_uuid', 'r') as id_file:
-            self.metadata['instance-id'] = str(id_file.read()).rstrip()
+            self.metadata['instance-id'] = str(id_file.read()).rstrip().lower()
             return self.metadata['instance-id']
 
 
