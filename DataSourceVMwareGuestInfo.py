@@ -169,6 +169,20 @@ class DataSourceVMwareGuestInfo(sources.DataSource):
             self.metadata['instance-id'] = str(id_file.read()).rstrip().lower()
             return self.metadata['instance-id']
 
+    def get_public_ssh_keys(self):
+        public_keys_data = ""
+        if 'public-keys-data' in self.metadata:
+            public_keys_data = self.metadata['public-keys-data'].splitlines()
+
+        public_keys = []
+        if not public_keys_data:
+            return public_keys
+
+        for public_key in public_keys_data:
+            public_keys.append(public_key)
+
+        return public_keys
+
 
 def decode(key, enc_type, data):
     '''

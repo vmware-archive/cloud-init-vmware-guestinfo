@@ -21,7 +21,7 @@ $ curl -sSL https://raw.githubusercontent.com/vmware/cloud-init-vmware-guestinfo
 ```
 
 ## Configuration
-The data source is configured by setting `guestinfo` properties on a 
+The data source is configured by setting `guestinfo` properties on a
 VM's `extraconfig` data or a customizable vApp's `properties` data.
 
 | Property | Description |
@@ -33,7 +33,7 @@ VM's `extraconfig` data or a customizable vApp's `properties` data.
 | `guestinfo.vendordata` | A YAML document containing the cloud-init vendor data. |
 | `guestinfo.vendordata.encoding` | The encoding type for `guestinfo.vendordata`. |
 
-All `guestinfo.*.encoding` property values may be set to `base64` or 
+All `guestinfo.*.encoding` property values may be set to `base64` or
 `gzip+base64`.
 
 ## Walkthrough
@@ -41,7 +41,7 @@ The following series of steps is a demonstration on how to configure a VM
 with cloud-init and the VMX GuestInfo datasource.
 
 ### Create a network configuration file
-First, create the network configuration for the VM. Save the following 
+First, create the network configuration for the VM. Save the following
 YAML to a file named `network.config.yaml`:
 
 ```yaml
@@ -103,7 +103,7 @@ users:
 
 ### Assigning the cloud-config data to the VM's GuestInfo
 Please note that this step requires that the VM be powered off. All of
-the commands below use the VMware CLI tool, 
+the commands below use the VMware CLI tool,
 [`govc`](https://github.com/vmware/govmomi/blob/master/govc).
 
 Go ahead and assign the path to the VM to the environment variable `VM`:
@@ -145,7 +145,7 @@ the data for cloud-init. Valid values for `metadata.encoding` and
 Power the VM back on.
 ```shell
 $ govc vm.power -vm "${VM}" -on
-``` 
+```
 
 If all went according to plan, the CentOS box is:
 * Locked down, allosing SSH access only for the user in the cloud-config
@@ -163,10 +163,17 @@ The instance ID may be set by way of the metadata key `instance-id`.
 However, if this value is absent then then the instance ID is
 read from the file `/sys/class/dmi/id/product_uuid`.
 
+### Providing public SSH keys
+The public SSH keys may be set by way of the metadata key `public-keys-data`.
+Each newline-terminated string will be interpreted as a separate
+SSH public key, which will be placed in distro's default user's
+`~/.ssh/authorized_keys`. If the value is empty or absent,
+then nothing will be written to `~/.ssh/authorized_keys`.
+
 ### Configuring the network
 The network is configured by setting the metadata key `network`
-with a value consistent with Network Config Versions 
-[1](http://bit.ly/cloudinit-net-conf-v1) or 
+with a value consistent with Network Config Versions
+[1](http://bit.ly/cloudinit-net-conf-v1) or
 [2](http://bit.ly/cloudinit-net-conf-v2),
 depending on the Linux distro's version of cloud-init.
 
@@ -195,5 +202,5 @@ of supported `$OS` platforms are:
 
 ## Conclusion
 To learn more about how to use cloud-init with CentOS, please see the cloud-init
-[documentation](https://cloudinit.readthedocs.io/en/latest/index.html) for more 
+[documentation](https://cloudinit.readthedocs.io/en/latest/index.html) for more
 examples and reference information for the cloud-config files.
