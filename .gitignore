@@ -5,3 +5,5 @@
 /test.sh
 /userdata.yaml
 .DS_Store
+*.pyc
+/__pycache__
