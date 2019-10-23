@@ -23,7 +23,9 @@ import collections
 import copy
 from distutils.spawn import find_executable
 import json
+import os
 import socket
+import string
 import zlib
 
 from cloudinit import log as logging
@@ -37,6 +39,7 @@ import netifaces
 LOG = logging.getLogger(__name__)
 NOVAL = "No value found"
 VMTOOLSD = find_executable("vmtoolsd")
+VMX_GUESTINFO = "VMX_GUESTINFO"
 
 
 class NetworkConfigError(Exception):
@@ -90,7 +93,7 @@ class DataSourceVMwareGuestInfo(sources.DataSource):
 
     def __init__(self, sys_cfg, distro, paths, ud_proc=None):
         sources.DataSource.__init__(self, sys_cfg, distro, paths, ud_proc)
-        if not VMTOOLSD:
+        if not get_data_access_method():
             LOG.error("Failed to find vmtoolsd")
 
     def get_data(self):
@@ -103,7 +106,7 @@ class DataSourceVMwareGuestInfo(sources.DataSource):
         that the get_data functions in newer versions of cloud-init do,
         such as calling persist_instance_data.
         """
-        if not VMTOOLSD:
+        if not get_data_access_method():
             LOG.error("vmtoolsd is required to fetch guestinfo value")
             return False
 
@@ -231,24 +234,37 @@ def get_guestinfo_value(key):
     Returns a guestinfo value for the specified key.
     '''
     LOG.debug("Getting guestinfo value for key %s", key)
-    try:
-        (stdout, stderr) = util.subp(
-            [VMTOOLSD, "--cmd", "info-get guestinfo." + key])
-        if stderr == NOVAL:
-            LOG.debug("No value found for key %s", key)
-        elif not stdout:
-            LOG.error("Failed to get guestinfo value for key %s", key)
-        else:
-            return stdout.rstrip()
-    except util.ProcessExecutionError as error:
-        if error.stderr == NOVAL:
+
+    data_access_method = get_data_access_method()
+
+    if data_access_method == VMX_GUESTINFO:
+        env_key = ("vmx.guestinfo." + key).upper().replace(".", "_", -1)
+        val = os.environ.get(env_key, "")
+        if val == "":
             LOG.debug("No value found for key %s", key)
         else:
+            return val
+
+    if data_access_method == VMTOOLSD:
+        try:
+            (stdout, stderr) = util.subp(
+                [VMTOOLSD, "--cmd", "info-get guestinfo." + key])
+            if stderr == NOVAL:
+                LOG.debug("No value found for key %s", key)
+            elif not stdout:
+                LOG.error("Failed to get guestinfo value for key %s", key)
+            else:
+                return stdout.rstrip()
+        except util.ProcessExecutionError as error:
+            if error.stderr == NOVAL:
+                LOG.debug("No value found for key %s", key)
+            else:
+                util.logexc(
+                    LOG, "Failed to get guestinfo value for key %s: %s", key, error)
+        except Exception:
             util.logexc(
-                LOG, "Failed to get guestinfo value for key %s: %s", key, error)
-    except Exception:
-        util.logexc(
-            LOG, "Unexpected error while trying to get guestinfo value for key %s", key)
+                LOG, "Unexpected error while trying to get guestinfo value for key %s", key)
+
     return None
 
 
@@ -397,6 +413,8 @@ def get_default_ip_addrs():
     return ipv4, ipv6
 
 # patched socket.getfqdn() - see https://bugs.python.org/issue5004
+
+
 def getfqdn(name=''):
     """Get fully qualified domain name from name.
      An empty argument is interpreted as meaning the local host.
@@ -405,7 +423,8 @@ def getfqdn(name=''):
     if not name or name == '0.0.0.0':
         name = socket.gethostname()
     try:
-        addrs = socket.getaddrinfo(name, None, 0, socket.SOCK_DGRAM, 0, socket.AI_CANONNAME)
+        addrs = socket.getaddrinfo(
+            name, None, 0, socket.SOCK_DGRAM, 0, socket.AI_CANONNAME)
     except socket.error:
         pass
     else:
@@ -414,6 +433,7 @@ def getfqdn(name=''):
                 name = addr[3]
                 break
     return name
+
 
 def get_host_info():
     '''
@@ -492,6 +512,14 @@ def get_host_info():
                 by_ipv6[key] = val
 
     return host_info
+
+
+def get_data_access_method():
+    if os.environ.get(VMX_GUESTINFO, ""):
+        return VMX_GUESTINFO
+    if VMTOOLSD:
+        return VMTOOLSD
+    return None
 
 
 def main():
