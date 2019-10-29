@@ -38,7 +38,7 @@ import netifaces
 
 LOG = logging.getLogger(__name__)
 NOVAL = "No value found"
-VMTOOLSD = find_executable("vmtoolsd")
+VMWARE_RPCTOOL = find_executable("vmware-rpctool")
 VMX_GUESTINFO = "VMX_GUESTINFO"
 
 
@@ -94,7 +94,7 @@ class DataSourceVMwareGuestInfo(sources.DataSource):
     def __init__(self, sys_cfg, distro, paths, ud_proc=None):
         sources.DataSource.__init__(self, sys_cfg, distro, paths, ud_proc)
         if not get_data_access_method():
-            LOG.error("Failed to find vmtoolsd")
+            LOG.error("Failed to find vmware-rpctool")
 
     def get_data(self):
         """
@@ -107,7 +107,7 @@ class DataSourceVMwareGuestInfo(sources.DataSource):
         such as calling persist_instance_data.
         """
         if not get_data_access_method():
-            LOG.error("vmtoolsd is required to fetch guestinfo value")
+            LOG.error("vmware-rpctool is required to fetch guestinfo value")
             return False
 
         # Get the metadata.
@@ -245,10 +245,10 @@ def get_guestinfo_value(key):
         else:
             return val
 
-    if data_access_method == VMTOOLSD:
+    if data_access_method == VMWARE_RPCTOOL:
         try:
             (stdout, stderr) = util.subp(
-                [VMTOOLSD, "--cmd", "info-get guestinfo." + key])
+                [VMWARE_RPCTOOL, "info-get guestinfo." + key])
             if stderr == NOVAL:
                 LOG.debug("No value found for key %s", key)
             elif not stdout:
@@ -517,8 +517,8 @@ def get_host_info():
 def get_data_access_method():
     if os.environ.get(VMX_GUESTINFO, ""):
         return VMX_GUESTINFO
-    if VMTOOLSD:
-        return VMTOOLSD
+    if VMWARE_RPCTOOL:
+        return VMWARE_RPCTOOL
     return None
 
 
