@@ -40,6 +40,7 @@ LOG = logging.getLogger(__name__)
 NOVAL = "No value found"
 VMWARE_RPCTOOL = find_executable("vmware-rpctool")
 VMX_GUESTINFO = "VMX_GUESTINFO"
+GUESTINFO_EMPTY_YAML_VAL = "---"
 
 
 class NetworkConfigError(Exception):
@@ -234,6 +235,39 @@ def decode(key, enc_type, data):
     return raw_data
 
 
+def get_none_if_empty_val(val):
+    '''
+    get_none_if_empty_val returns None if the provided value, once stripped
+    of its trailing whitespace, is empty or equal to GUESTINFO_EMPTY_YAML_VAL.
+
+    The return value is always a string, regardless of whether the input is
+    a bytes class or a string.
+    '''
+
+    # If the provided value is a bytes class, convert it to a string to
+    # simplify the rest of this function's logic.
+    if isinstance(val, bytes):
+        val = val.decode()
+
+    val = val.rstrip()
+    if len(val) == 0 or val == GUESTINFO_EMPTY_YAML_VAL:
+        return None
+    return val
+
+
+def handle_returned_guestinfo_val(key, val):
+    '''
+    handle_returned_guestinfo_val returns the provided value if it is
+    not empty or set to GUESTINFO_EMPTY_YAML_VAL, otherwise None is
+    returned
+    '''
+    val = get_none_if_empty_val(val)
+    if val:
+        return val
+    LOG.debug("No value found for key %s", key)
+    return None
+
+
 def get_guestinfo_value(key):
     '''
     Returns a guestinfo value for the specified key.
@@ -244,11 +278,7 @@ def get_guestinfo_value(key):
 
     if data_access_method == VMX_GUESTINFO:
         env_key = ("vmx.guestinfo." + key).upper().replace(".", "_", -1)
-        val = os.environ.get(env_key, "")
-        if val == "":
-            LOG.debug("No value found for key %s", key)
-        else:
-            return val
+        return handle_returned_guestinfo_val(key, os.environ.get(env_key, ""))
 
     if data_access_method == VMWARE_RPCTOOL:
         try:
@@ -259,7 +289,7 @@ def get_guestinfo_value(key):
             elif not stdout:
                 LOG.error("Failed to get guestinfo value for key %s", key)
             else:
-                return stdout.rstrip()
+                return handle_returned_guestinfo_val(key, stdout)
         except util.ProcessExecutionError as error:
             if error.stderr == NOVAL:
                 LOG.debug("No value found for key %s", key)
@@ -310,22 +340,21 @@ def set_guestinfo_value(key, value):
 
 def clear_guestinfo_keys(keys):
     '''
-    clear_guestinfo_keys clears guestinfo of all of the keys in the given list
+    clear_guestinfo_keys clears guestinfo of all of the keys in the given list.
+    each key will have its value set to "---". Since the value is valid YAML,
+    cloud-init can still read it if it tries.
     '''
     if not keys:
         return
+    if not type(keys) in (list, tuple):
+        keys = [keys]
     for key in keys:
-        clear_guestinfo_value(key)
-        clear_guestinfo_value(key + ".encoding")
-
-
-def clear_guestinfo_value(key):
-    '''
-    clear_guestinfo_value sets the specified guestinfo key to an empty string
-    '''
-    LOG.info("clearing guestinfo.%s", key)
-    if not set_guestinfo_value(key, ''):
-        LOG.error("failed to clear guestinfo.%s", key)
+        LOG.info("clearing guestinfo.%s", key)
+        if not set_guestinfo_value(key, GUESTINFO_EMPTY_YAML_VAL):
+            LOG.error("failed to clear guestinfo.%s", key)
+        LOG.info("clearing guestinfo.%s.encoding", key)
+        if not set_guestinfo_value(key + ".encoding", ""):
+            LOG.error("failed to clear guestinfo.%s.encoding", key)
 
 
 def guestinfo(key):

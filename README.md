@@ -163,11 +163,13 @@ cleanup-guestinfo:
 When the above snippet is added to the metadata, the datasource will iterate over the elements in the `cleanup-guestinfo` array and clear each of the keys. For example, the above snippet will cause the following commands to be executed:
 
 ```shell
-vmware-rpctool "info-set guestinfo.userdata  "
-vmware-rpctool "info-set guestinfo.vendordata  "
+vmware-rpctool "info-set guestinfo.userdata ---"
+vmware-rpctool "info-set guestinfo.userdata.encoding  "
+vmware-rpctool "info-set guestinfo.vendordata ---"
+vmware-rpctool "info-set guestinfo.vendordata.encoding  "
 ```
 
-Please note that the keys are actually set to a single space character as it is not possible to remove an existing key from the guestinfo dictionary.
+Please note that keys are set to the valid YAML string `---` as it is not possible remove an existing key from the guestinfo key-space. A key's analogous encoding property will be set to a single white-space character, causing the datasource to treat the actual key value as plain-text, thereby loading it as an empty YAML doc (hence the aforementioned `---`).
 
 ## Building the RPM
 
