@@ -41,13 +41,13 @@ if [ -n "${VMX_GUESTINFO}" ]; then
   fi
 fi
 
-if ! command -v vmtoolsd >/dev/null 2>&1; then
+if ! command -v vmware-rpctool >/dev/null 2>&1; then
   exit 1
 fi
 
-if { vmtoolsd --cmd "info-get guestinfo.metadata" || \
-     vmtoolsd --cmd "info-get guestinfo.userdata" || \
-     vmtoolsd --cmd "info-get guestinfo.vendordata"; } >/dev/null 2>&1; then
+if { vmware-rpctool "info-get guestinfo.metadata" || \
+     vmware-rpctool "info-get guestinfo.userdata" || \
+     vmware-rpctool "info-get guestinfo.vendordata"; } >/dev/null 2>&1; then
    exit 0
 fi
 
