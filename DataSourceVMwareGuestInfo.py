@@ -106,7 +106,8 @@ class DataSourceVMwareGuestInfo(sources.DataSource):
         that the get_data functions in newer versions of cloud-init do,
         such as calling persist_instance_data.
         """
-        if not get_data_access_method():
+        data_access_method = get_data_access_method()
+        if not data_access_method:
             LOG.error("vmware-rpctool is required to fetch guestinfo value")
             return False
 
@@ -118,6 +119,10 @@ class DataSourceVMwareGuestInfo(sources.DataSource):
 
         # Get the vendor data.
         self.vendordata_raw = guestinfo('vendordata')
+
+        # Check to see if any of the guestinfo data should be removed.
+        if data_access_method == VMWARE_RPCTOOL:
+            clear_guestinfo_keys(self.metadata['cleanup-guestinfo'])
 
         if self.metadata or self.userdata_raw or self.vendordata_raw:
             return True
@@ -266,6 +271,61 @@ def get_guestinfo_value(key):
                 LOG, "Unexpected error while trying to get guestinfo value for key %s", key)
 
     return None
+
+
+def set_guestinfo_value(key, value):
+    '''
+    Sets a guestinfo value for the specified key. Set value to an empty string
+    to clear an existing guestinfo key.
+    '''
+
+    # If value is an empty string then set it to a single space as it is not
+    # possible to set a guestinfo key to an empty string. Setting a guestinfo
+    # key to a single space is as close as it gets to clearing an existing
+    # guestinfo key.
+    if value == "":
+        value = " "
+
+    LOG.debug("Setting guestinfo key=%s to value=%s", key, value)
+
+    data_access_method = get_data_access_method()
+
+    if data_access_method == VMX_GUESTINFO:
+        return True
+
+    if data_access_method == VMWARE_RPCTOOL:
+        try:
+            util.subp(
+                [VMWARE_RPCTOOL, ("info-set guestinfo.%s %s" % (key, value))])
+            return True
+        except util.ProcessExecutionError as error:
+            util.logexc(
+                LOG, "Failed to set guestinfo key=%s to value=%s: %s", key, value, error)
+        except Exception:
+            util.logexc(
+                LOG, "Unexpected error while trying to set guestinfo key=%s to value=%s", key, value)
+
+    return None
+
+
+def clear_guestinfo_keys(keys):
+    '''
+    clear_guestinfo_keys clears guestinfo of all of the keys in the given list
+    '''
+    if not keys:
+        return
+    for key in keys:
+        clear_guestinfo_value(key)
+        clear_guestinfo_value(key + ".encoding")
+
+
+def clear_guestinfo_value(key):
+    '''
+    clear_guestinfo_value sets the specified guestinfo key to an empty string
+    '''
+    LOG.info("clearing guestinfo.%s", key)
+    if not set_guestinfo_value(key, ''):
+        LOG.error("failed to clear guestinfo.%s", key)
 
 
 def guestinfo(key):
