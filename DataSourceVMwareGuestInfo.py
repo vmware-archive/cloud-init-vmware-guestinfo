@@ -571,6 +571,7 @@ def get_host_info():
     if hostname:
         host_info['hostname'] = hostname
         host_info['local-hostname'] = hostname
+        host_info['local_hostname'] = hostname
 
     default_ipv4, default_ipv6 = get_default_ip_addrs()
     if default_ipv4:
