@@ -171,6 +171,15 @@ vmware-rpctool "info-set guestinfo.vendordata.encoding  "
 
 Please note that keys are set to the valid YAML string `---` as it is not possible remove an existing key from the guestinfo key-space. A key's analogous encoding property will be set to a single white-space character, causing the datasource to treat the actual key value as plain-text, thereby loading it as an empty YAML doc (hence the aforementioned `---`).
 
+### Reading the local IP addresses
+
+This datasource automatically discovers the local IPv4 and IPv6 addresses for a guest operating system based on the default routes. However, when inspecting a VM externally, it's not possible to know what the _default_ IP address is for the guest OS. That's why this datasource sets the discovered, local IPv4 and IPv6 addresses back in the guestinfo namespace as the following keys:
+
+* `guestinfo.local-ipv4`
+* `guestinfo.local-ipv6`
+
+It is possible that a host may not have any default, local IP addresses. It's also possible the reported, local addresses are link-local addresses. But these two keys may be used to discover what this datasource determined were the local IPv4 and IPv6 addresses for a host.
+
 ## Building the RPM
 
 Building the RPM locally is handled via Docker. Simple execute the following command:
