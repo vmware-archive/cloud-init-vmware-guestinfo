@@ -41,6 +41,8 @@ NOVAL = "No value found"
 VMWARE_RPCTOOL = find_executable("vmware-rpctool")
 VMX_GUESTINFO = "VMX_GUESTINFO"
 GUESTINFO_EMPTY_YAML_VAL = "---"
+LOCAL_IPV4 = 'local-ipv4'
+LOCAL_IPV6 = 'local-ipv6'
 
 
 class NetworkConfigError(Exception):
@@ -143,6 +145,10 @@ class DataSourceVMwareGuestInfo(sources.DataSource):
         # Get information about the host.
         host_info = get_host_info()
         LOG.info("got host-info: %s", host_info)
+
+        # Reflect any possible local IPv4 or IPv6 addresses in the guest
+        # info.
+        advertise_local_ip_addrs(host_info)
 
         # Ensure the metadata gets updated with information about the
         # host, including the network interfaces, default IP addresses,
@@ -253,6 +259,28 @@ def get_none_if_empty_val(val):
     if len(val) == 0 or val == GUESTINFO_EMPTY_YAML_VAL:
         return None
     return val
+
+
+def advertise_local_ip_addrs(host_info):
+    '''
+    advertise_local_ip_addrs gets the local IP address information from
+    the provided host_info map and sets the addresses in the guestinfo
+    namespace
+    '''
+    if not host_info:
+        return
+
+    # Reflect any possible local IPv4 or IPv6 addresses in the guest
+    # info.
+    local_ipv4 = host_info[LOCAL_IPV4]
+    if local_ipv4:
+        set_guestinfo_value(LOCAL_IPV4, local_ipv4)
+        LOG.info("advertised local ipv4 address %s in guestinfo", local_ipv4)
+
+    local_ipv6 = host_info[LOCAL_IPV6]
+    if local_ipv6:
+        set_guestinfo_value(LOCAL_IPV6, local_ipv6)
+        LOG.info("advertised local ipv6 address %s in guestinfo", local_ipv6)
 
 
 def handle_returned_guestinfo_val(key, val):
@@ -546,9 +574,9 @@ def get_host_info():
 
     default_ipv4, default_ipv6 = get_default_ip_addrs()
     if default_ipv4:
-        host_info['local-ipv4'] = default_ipv4
+        host_info[LOCAL_IPV4] = default_ipv4
     if default_ipv6:
-        host_info['local-ipv6'] = default_ipv6
+        host_info[LOCAL_IPV6] = default_ipv6
 
     by_mac = host_info['network']['interfaces']['by-mac']
     by_ipv4 = host_info['network']['interfaces']['by-ipv4']
