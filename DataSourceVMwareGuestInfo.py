@@ -272,12 +272,12 @@ def advertise_local_ip_addrs(host_info):
 
     # Reflect any possible local IPv4 or IPv6 addresses in the guest
     # info.
-    local_ipv4 = host_info[LOCAL_IPV4]
+    local_ipv4 = host_info.get(LOCAL_IPV4)
     if local_ipv4:
         set_guestinfo_value(LOCAL_IPV4, local_ipv4)
         LOG.info("advertised local ipv4 address %s in guestinfo", local_ipv4)
 
-    local_ipv6 = host_info[LOCAL_IPV6]
+    local_ipv6 = host_info.get(LOCAL_IPV6)
     if local_ipv6:
         set_guestinfo_value(LOCAL_IPV6, local_ipv6)
         LOG.info("advertised local ipv6 address %s in guestinfo", local_ipv6)
