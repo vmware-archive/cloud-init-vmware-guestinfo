@@ -43,6 +43,7 @@ VMX_GUESTINFO = "VMX_GUESTINFO"
 GUESTINFO_EMPTY_YAML_VAL = "---"
 LOCAL_IPV4 = 'local-ipv4'
 LOCAL_IPV6 = 'local-ipv6'
+CLEANUP_GUESTINFO = 'cleanup-guestinfo'
 
 
 class NetworkConfigError(Exception):
@@ -124,8 +125,8 @@ class DataSourceVMwareGuestInfo(sources.DataSource):
         self.vendordata_raw = guestinfo('vendordata')
 
         # Check to see if any of the guestinfo data should be removed.
-        if data_access_method == VMWARE_RPCTOOL:
-            clear_guestinfo_keys(self.metadata['cleanup-guestinfo'])
+        if data_access_method == VMWARE_RPCTOOL and CLEANUP_GUESTINFO in self.metadata:
+            clear_guestinfo_keys(self.metadata[CLEANUP_GUESTINFO])
 
         if self.metadata or self.userdata_raw or self.vendordata_raw:
             return True
