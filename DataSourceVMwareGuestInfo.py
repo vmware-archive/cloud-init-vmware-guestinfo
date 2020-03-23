@@ -22,10 +22,12 @@ import base64
 import collections
 import copy
 from distutils.spawn import find_executable
+from distutils.util import strtobool
 import json
 import os
 import socket
 import string
+import time
 import zlib
 
 from cloudinit import log as logging
@@ -44,6 +46,9 @@ GUESTINFO_EMPTY_YAML_VAL = "---"
 LOCAL_IPV4 = 'local-ipv4'
 LOCAL_IPV6 = 'local-ipv6'
 CLEANUP_GUESTINFO = 'cleanup-guestinfo'
+WAIT_ON_NETWORK = 'wait-on-network'
+WAIT_ON_NETWORK_IPV4 = 'ipv4'
+WAIT_ON_NETWORK_IPV6 = 'ipv6'
 
 
 class NetworkConfigError(Exception):
@@ -143,8 +148,7 @@ class DataSourceVMwareGuestInfo(sources.DataSource):
         brought up the OS at this point.
         """
 
-        # Get information about the host.
-        host_info = get_host_info()
+        host_info = wait_on_network(self.metadata)
         LOG.info("got host-info: %s", host_info)
 
         # Reflect any possible local IPv4 or IPv6 addresses in the guest
@@ -633,6 +637,42 @@ def get_host_info():
     return host_info
 
 
+def wait_on_network(metadata):
+    # Determine whether we need to wait on the network coming online.
+    wait_on_ipv4 = False
+    wait_on_ipv6 = False
+    if WAIT_ON_NETWORK in metadata:
+        wait_on_network = metadata[WAIT_ON_NETWORK]
+        if WAIT_ON_NETWORK_IPV4 in wait_on_network:
+            wait_on_ipv4_val = wait_on_network[WAIT_ON_NETWORK_IPV4]
+            if isinstance(wait_on_ipv4_val, bool):
+                wait_on_ipv4 = wait_on_ipv4_val
+            else:
+                wait_on_ipv4 = bool(strtobool(wait_on_ipv4_val))
+        if WAIT_ON_NETWORK_IPV6 in wait_on_network:
+            wait_on_ipv6_val = wait_on_network[WAIT_ON_NETWORK_IPV6]
+            if isinstance(wait_on_ipv6_val, bool):
+                wait_on_ipv6 = wait_on_ipv6_val
+            else:
+                wait_on_ipv6 = bool(strtobool(wait_on_ipv6_val))
+
+    # Get information about the host.
+    host_info = None
+    while host_info == None:
+        host_info = get_host_info()
+        if wait_on_ipv4 and LOCAL_IPV4 not in host_info:
+            LOG.info("ipv4 not ready")
+            host_info = None
+        if wait_on_ipv6 and LOCAL_IPV6 not in host_info:
+            LOG.info("ipv6 not ready")
+            host_info = None
+        if host_info == None:
+            LOG.info("waiting on network")
+            time.sleep(1)
+
+    return host_info
+
+
 def get_data_access_method():
     if os.environ.get(VMX_GUESTINFO, ""):
         return VMX_GUESTINFO
@@ -645,8 +685,9 @@ def main():
     '''
     Executed when this file is used as a program.
     '''
-    metadata = {'network': {'config': {'dhcp': True}}}
-    host_info = get_host_info()
+    metadata = {'wait-on-network': {'ipv4': True, 'ipv6': "false"},
+                'network': {'config': {'dhcp': True}}}
+    host_info = wait_on_network(metadata)
     metadata = always_merger.merge(metadata, host_info)
     print(util.json_dumps(metadata))
 

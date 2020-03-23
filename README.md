@@ -180,6 +180,20 @@ This datasource automatically discovers the local IPv4 and IPv6 addresses for a 
 
 It is possible that a host may not have any default, local IP addresses. It's also possible the reported, local addresses are link-local addresses. But these two keys may be used to discover what this datasource determined were the local IPv4 and IPv6 addresses for a host.
 
+### Waiting on the network
+
+Sometimes cloud-init may bring up the network, but it will not finish coming online before the datasource's `setup` function is called, resulting in an `/var/run/cloud-init/instance-data.json` file that does not have the correct network information. It is possible to instruct the datasource to wait until an IPv4 or IPv6 address is available before writing the instance data with the following metadata properties:
+
+```yaml
+wait-on-network:
+  ipv4: true
+  ipv6: true
+```
+
+If either of the above values are true, then the datasource will sleep for a second, check the network status, and repeat until one or both addresses from the specified families are available.
+
+
+
 ## Building the RPM
 
 Building the RPM locally is handled via Docker. Simple execute the following command:
