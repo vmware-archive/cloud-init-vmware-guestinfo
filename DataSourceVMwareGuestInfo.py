@@ -23,6 +23,7 @@ import collections
 import copy
 from distutils.spawn import find_executable
 from distutils.util import strtobool
+import ipaddress
 import json
 import os
 import socket
@@ -557,6 +558,21 @@ def getfqdn(name=''):
     return name
 
 
+def is_valid_ip_addr(val):
+    """
+    Returns false if the address is loopback, link local or unspecified;
+    otherwise true is returned.
+    """
+    addr = None
+    try:
+        addr = ipaddress.ip_address(val)
+    except:
+        return False
+    if addr.is_link_local or addr.is_loopback or addr.is_unspecified:
+        return False
+    return True
+
+
 def get_host_info():
     '''
     Returns host information such as the host name and network interfaces.
@@ -607,15 +623,25 @@ def get_host_info():
             key = mac
             val = {}
             if af_inet4:
-                val["ipv4"] = af_inet4
+                af_inet4_vals = []
+                for ip_info in af_inet4:
+                    if not is_valid_ip_addr(ip_info['addr']):
+                        continue
+                    af_inet4_vals.append(ip_info)
+                val["ipv4"] = af_inet4_vals
             if af_inet6:
-                val["ipv6"] = af_inet6
+                af_inet6_vals = []
+                for ip_info in af_inet6:
+                    if not is_valid_ip_addr(ip_info['addr']):
+                        continue
+                    af_inet6_vals.append(ip_info)
+                val["ipv6"] = af_inet6_vals
             by_mac[key] = val
 
         if af_inet4:
             for ip_info in af_inet4:
                 key = ip_info['addr']
-                if key == '127.0.0.1':
+                if not is_valid_ip_addr(key):
                     continue
                 val = copy.deepcopy(ip_info)
                 del val['addr']
@@ -626,7 +652,7 @@ def get_host_info():
         if af_inet6:
             for ip_info in af_inet6:
                 key = ip_info['addr']
-                if key == '::1':
+                if not is_valid_ip_addr(key):
                     continue
                 val = copy.deepcopy(ip_info)
                 del val['addr']
