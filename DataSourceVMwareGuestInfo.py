@@ -686,12 +686,26 @@ def wait_on_network(metadata):
     host_info = None
     while host_info == None:
         host_info = get_host_info()
-        if wait_on_ipv4 and LOCAL_IPV4 not in host_info:
-            LOG.info("ipv4 not ready")
-            host_info = None
-        if wait_on_ipv6 and LOCAL_IPV6 not in host_info:
-            LOG.info("ipv6 not ready")
-            host_info = None
+        if wait_on_ipv4:
+            ipv4_ready = False
+            if 'network' in host_info:
+                if 'interfaces' in host_info['network']:
+                    if 'by-ipv4' in host_info['network']['interfaces']:
+                        if len(host_info['network']['interfaces']['by-ipv4']) > 0:
+                            ipv4_ready = True
+            if not ipv4_ready:
+                LOG.info("ipv4 not ready")
+                host_info = None
+        if wait_on_ipv6:
+            ipv6_ready = False
+            if 'network' in host_info:
+                if 'interfaces' in host_info['network']:
+                    if 'by-ipv6' in host_info['network']['interfaces']:
+                        if len(host_info['network']['interfaces']['by-ipv6']) > 0:
+                            ipv6_ready = True
+            if not ipv6_ready:
+                LOG.info("ipv6 not ready")
+                host_info = None
         if host_info == None:
             LOG.info("waiting on network")
             time.sleep(1)
