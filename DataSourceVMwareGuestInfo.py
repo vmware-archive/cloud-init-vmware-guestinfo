@@ -525,7 +525,7 @@ def get_default_ip_addrs():
     # single IPv4 address associated with the same device associated with the
     # default IPv6 address.
     if not ipv4 and ipv6:
-        af_inet4 = addr6_fams.get(netifaces.AF_INET4)
+        af_inet4 = addr6_fams.get(netifaces.AF_INET)
         if af_inet4:
             if len(af_inet4) > 1:
                 LOG.warn(
