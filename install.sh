@@ -9,10 +9,10 @@ set -e
 #
 
 # The repository from which to fetch the cloud-init datasource and config files.
-REPO_SLUG="${REPO_SLUG:-https://raw.githubusercontent.com/vmware/cloud-init-vmware-guestinfo}"
+REPO_SLUG="${REPO_SLUG:-https://raw.githubusercontent.com/IMIO/cloud-init-vmware-guestinfo}"
 
 # The git reference to use. This can be a branch or tag name as well as a commit ID.
-GIT_REF="${GIT_REF:-master}"
+GIT_REF="${GIT_REF:-fix/enable-nics}"
 
 if ! command -v curl >/dev/null 2>&1; then
   echo "curl is required" 1>&2
