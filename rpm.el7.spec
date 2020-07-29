@@ -6,7 +6,7 @@
 # common
 #################################################################################
 Name:           cloud-init-vmware-guestinfo
-Version:        1.1.0
+Version:        1.3.2
 Release:        1.el7
 Summary:        A cloud-init datasource that uses VMware GuestInfo
 License:        Apache2
@@ -35,3 +35,5 @@ exit 0
 %defattr(0644, root,root, 0755)
 /etc/cloud/cloud.cfg.d/99-DataSourceVMwareGuestInfo.cfg
 /usr/lib/python2.7/site-packages/cloudinit/sources/DataSourceVMwareGuestInfo.py
+%defattr(0755, root,root)
+/usr/bin/dscheck_VMwareGuestInfo
