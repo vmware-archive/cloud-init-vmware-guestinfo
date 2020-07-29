@@ -13,6 +13,7 @@ rpm-el7:
 		-v $$(pwd)/rpm.el7.spec:/root/rpmbuild/SPECS/rpm.spec:ro \
 		-v $$(pwd)/99-DataSourceVMwareGuestInfo.cfg:/root/rpmbuild/BUILD/etc/cloud/cloud.cfg.d/99-DataSourceVMwareGuestInfo.cfg:ro \
 		-v $$(pwd)/DataSourceVMwareGuestInfo.py:/root/rpmbuild/BUILD/usr/lib/python2.7/site-packages/cloudinit/sources/DataSourceVMwareGuestInfo.py:ro \
+		-v $$(pwd)/dscheck_VMwareGuestInfo.sh:/root/rpmbuild/BUILD/usr/bin/dscheck_VMwareGuestInfo:ro \
 		rpmbuild:el7 \
 		rpmbuild -ba /root/rpmbuild/SPECS/rpm.spec
 
