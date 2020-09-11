@@ -41,15 +41,11 @@ import netifaces
 
 # in cloud init >= 20.3 subp is in its own module
 try:
-    import subp
+    from cloudinit import subp
 except ImportError:
     subp_module = util
 else:
-    # early versions of the subp module don't have the subp function
-    if hasattr(subp, 'subp'):
-        subp_module = subp
-    else:
-        subp_module = util
+    subp_module = subp
 
 LOG = logging.getLogger(__name__)
 NOVAL = "No value found"
