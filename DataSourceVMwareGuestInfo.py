@@ -575,7 +575,7 @@ def is_valid_ip_addr(val):
     """
     addr = None
     try:
-        addr = ipaddress.ip_address(val)
+        addr = ipaddress.ip_address(unicode(val, "utf-8"))
     except:
         return False
     if addr.is_link_local or addr.is_loopback or addr.is_unspecified:
