@@ -39,17 +39,12 @@ from cloudinit import safeyaml
 from deepmerge import always_merger
 import netifaces
 
-# in cloud init >= 20.3 subp is in its own module
+# from cloud-init >= 20.3 subp is in its own module
 try:
-    import subp
+    from cloudinit.subp import subp, ProcessExecutionError
 except ImportError:
-    subp_module = util
-else:
-    # early versions of the subp module don't have the subp function
-    if hasattr(subp, 'subp'):
-        subp_module = subp
-    else:
-        subp_module = util
+    from cloudinit.util import subp, ProcessExecutionError
+
 
 LOG = logging.getLogger(__name__)
 NOVAL = "No value found"
@@ -326,7 +321,7 @@ def get_guestinfo_value(key):
 
     if data_access_method == VMWARE_RPCTOOL:
         try:
-            (stdout, stderr) = subp_module.subp(
+            (stdout, stderr) = subp(
                 [VMWARE_RPCTOOL, "info-get guestinfo." + key])
             if stderr == NOVAL:
                 LOG.debug("No value found for key %s", key)
@@ -334,7 +329,7 @@ def get_guestinfo_value(key):
                 LOG.error("Failed to get guestinfo value for key %s", key)
             else:
                 return handle_returned_guestinfo_val(key, stdout)
-        except subp_module.ProcessExecutionError as error:
+        except ProcessExecutionError as error:
             if error.stderr == NOVAL:
                 LOG.debug("No value found for key %s", key)
             else:
@@ -369,10 +364,9 @@ def set_guestinfo_value(key, value):
 
     if data_access_method == VMWARE_RPCTOOL:
         try:
-            subp_module.subp(
-                [VMWARE_RPCTOOL, ("info-set guestinfo.%s %s" % (key, value))])
+            subp([VMWARE_RPCTOOL, ("info-set guestinfo.%s %s" % (key, value))])
             return True
-        except subp_module.ProcessExecutionError as error:
+        except ProcessExecutionError as error:
             util.logexc(
                 LOG, "Failed to set guestinfo key=%s to value=%s: %s", key, value, error)
         except Exception:
