@@ -58,6 +58,7 @@ WAIT_ON_NETWORK = 'wait-on-network'
 WAIT_ON_NETWORK_IPV4 = 'ipv4'
 WAIT_ON_NETWORK_IPV6 = 'ipv6'
 
+
 class NetworkConfigError(Exception):
     '''
     NetworkConfigError is raised when there is an issue getting or
@@ -307,6 +308,7 @@ def handle_returned_guestinfo_val(key, val):
     LOG.debug("No value found for key %s", key)
     return None
 
+
 def get_guestinfo_value(key):
     '''
     Returns a guestinfo value for the specified key.
@@ -395,15 +397,55 @@ def clear_guestinfo_keys(keys):
             LOG.error("failed to clear guestinfo.%s.encoding", key)
 
 
+def get_ovfenv_prop(key):
+    ovf_env = get_guestinfo_value('ovfEnv')
+    if not ovf_env:
+        return None
+    import xml.etree.ElementTree as ET
+    tree = ET.fromstring(ovf_env)
+    root = tree.getroot()
+    ns = {'ovf': 'http://schemas.dmtf.org/ovf/environment/1'}
+    xpath = './/ovf:PropertySection/ovf:Property[@{%s}key="%s"]' % (
+        ns['ovf'], key)
+    nodes = root.findall(xpath, ns)
+    if len(nodes) == 1:
+        return nodes[0].attrib['{%s}value' % ns['ovf']]
+    return None
+
+
 def guestinfo(key):
     '''
     guestinfo returns the guestinfo value for the provided key, decoding
-    the value when required
+    the value when required.
+
+    this function will also check to see if the provided key is defined
+    as a property on the OVF envelope
     '''
     data = get_guestinfo_value(key)
-    if not data:
-        return None
-    enc_type = get_guestinfo_value(key + '.encoding')
+    if data:
+        LOG.info('fetched %s directly from guestinfo' % key)
+    else:
+        try:
+            LOG.info('fetching %s from guestinfo by way of ovfEnv' % key)
+            data = get_ovfenv_prop(key)
+        except Exception as err:
+            LOG.error('failed to fetch guestinfo.ovfEnv.%s: %s' % (key, err))
+            return None
+
+    enc_type_key = key + '.encoding'
+    enc_type = get_guestinfo_value(enc_type_key)
+    if enc_type:
+        LOG.info('fetched %s directly from guestinfo' % enc_type_key)
+    else:
+        try:
+            LOG.info('fetching %s from guestinfo by way of ovfEnv' %
+                     enc_type_key)
+            enc_type = get_ovfenv_prop(enc_type_key)
+        except Exception as err:
+            LOG.error('failed to fetch guestinfo.ovfEnv.%s: %s' %
+                      (enc_type_key, err))
+            enc_type = None
+
     return decode('guestinfo.' + key, enc_type, data)
 
 
