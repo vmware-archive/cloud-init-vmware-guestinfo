@@ -36,7 +36,6 @@ from cloudinit import sources
 from cloudinit import util
 from cloudinit import safeyaml
 
-from deepmerge import always_merger
 import netifaces
 
 # from cloud-init >= 20.3 subp is in its own module
@@ -57,6 +56,7 @@ CLEANUP_GUESTINFO = 'cleanup-guestinfo'
 WAIT_ON_NETWORK = 'wait-on-network'
 WAIT_ON_NETWORK_IPV4 = 'ipv4'
 WAIT_ON_NETWORK_IPV6 = 'ipv6'
+
 
 class NetworkConfigError(Exception):
     '''
@@ -165,7 +165,7 @@ class DataSourceVMwareGuestInfo(sources.DataSource):
         # Ensure the metadata gets updated with information about the
         # host, including the network interfaces, default IP addresses,
         # etc.
-        self.metadata = always_merger.merge(self.metadata, host_info)
+        self.metadata = merge_dicts(self.metadata, host_info)
 
         # Persist the instance data for versions of cloud-init that support
         # doing so. This occurs here rather than in the get_data call in
@@ -306,6 +306,7 @@ def handle_returned_guestinfo_val(key, val):
         return val
     LOG.debug("No value found for key %s", key)
     return None
+
 
 def get_guestinfo_value(key):
     '''
@@ -728,14 +729,49 @@ def get_data_access_method():
     return None
 
 
+_MERGE_STRATEGY_ENV_VAR = 'CLOUD_INIT_VMWARE_GUEST_INFO_MERGE_STRATEGY'
+_MERGE_STRATEGY_DEEPMERGE = 'deepmerge'
+
+
+def merge_dicts(a, b):
+    merge_strategy = os.getenv(_MERGE_STRATEGY_ENV_VAR)
+    if merge_strategy == _MERGE_STRATEGY_DEEPMERGE:
+        try:
+            LOG.info('merging dictionaries with deepmerge strategy')
+            return merge_dicts_with_deep_merge(a, b)
+        except Exception as err:
+            LOG.error("deep merge failed: %s" % err)
+    LOG.info('merging dictionaries with stdlib strategy')
+    return merge_dicts_with_stdlib(a, b)
+
+
+def merge_dicts_with_deep_merge(a, b):
+    from deepmerge import always_merger
+    return always_merger.merge(a, b)
+
+
+def merge_dicts_with_stdlib(a, b):
+    for key, value in a.items():
+        if isinstance(value, dict):
+            node = b.setdefault(key, {})
+            merge_dicts_with_stdlib(value, node)
+        else:
+            b[key] = value
+    return b
+
+
 def main():
     '''
     Executed when this file is used as a program.
     '''
+    try:
+        logging.setupBasicLogging()
+    except Exception:
+        pass
     metadata = {'wait-on-network': {'ipv4': True, 'ipv6': "false"},
                 'network': {'config': {'dhcp': True}}}
     host_info = wait_on_network(metadata)
-    metadata = always_merger.merge(metadata, host_info)
+    metadata = merge_dicts(metadata, host_info)
     print(util.json_dumps(metadata))
 
 

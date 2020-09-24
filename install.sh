@@ -59,10 +59,11 @@ else
 fi
 echo "using python ${PYTHON_VERSION}"
 
-# The python modules deepmerge and netifaces are required. If they are
-# already installed, an assumption is made they are the correct versions.
-# Otherwise an attempt is made to install them with pip.
-if [ -z "$(get_py_mod_dir deepmerge)" ] || [ -z "$(get_py_mod_dir netifaces)" ]; then
+# The following modules are required:
+#   * netifaces
+# If a module is already installed then it is assumed to be compatible.
+# Otherwise an attempt is made to install the module with pip.
+if [ -z "$(get_py_mod_dir netifaces)" ]; then
   echo "installing requirements"
   if [ -z "$(get_py_mod_dir pip)" ]; then
     echo "pip is required" 1>&2
