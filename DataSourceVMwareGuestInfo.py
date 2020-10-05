@@ -573,7 +573,7 @@ def is_valid_ip_addr(val):
         try:
             addr = ipaddress.ip_address(val)
         except ipaddress.AddressValueError:
-            addr = ipaddress.ip_address(val.encode('utf-8'))
+            addr = ipaddress.ip_address(unicode(val))
     except:
         return False
     if addr.is_link_local or addr.is_loopback or addr.is_unspecified:
