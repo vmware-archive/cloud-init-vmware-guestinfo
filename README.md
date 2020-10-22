@@ -99,7 +99,7 @@ export METADATA=$(gzip -c9 <metadata.yaml | { base64 -w0 2>/dev/null || base64; 
        USERDATA=$(gzip -c9 <userdata.yaml | { base64 -w0 2>/dev/null || base64; })
 ```
 
-Assign the metadata and userdate to the VM's extra configuration dictionary, `guestinfo`:
+Assign the metadata and userdata to the VM's extra configuration dictionary, `guestinfo`:
 
 ```shell
 govc vm.change -vm "${VM}" \
