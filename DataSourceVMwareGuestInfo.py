@@ -18,25 +18,25 @@
 A cloud init datasource for VMware GuestInfo.
 '''
 
-import base64
-import collections
-import copy
-from distutils.spawn import find_executable
-from distutils.util import strtobool
-import ipaddress
-import json
 import os
-import socket
-import string
+import copy
 import time
 import zlib
+import json
+import socket
+import string
+import base64
+import ipaddress
+import netifaces
+import collections
 
-from cloudinit import log as logging
 from cloudinit import sources
 from cloudinit import util
 from cloudinit import safeyaml
+from cloudinit import log as logging
+from distutils.util import strtobool
+from distutils.spawn import find_executable
 
-import netifaces
 
 # from cloud-init >= 20.3 subp is in its own module
 try:
@@ -742,22 +742,12 @@ def merge_dicts(a, b):
         except Exception as err:
             LOG.error("deep merge failed: %s" % err)
     LOG.info('merging dictionaries with stdlib strategy')
-    return merge_dicts_with_stdlib(a, b)
+    return util.mergemanydict([a, b])
 
 
 def merge_dicts_with_deep_merge(a, b):
     from deepmerge import always_merger
     return always_merger.merge(a, b)
-
-
-def merge_dicts_with_stdlib(a, b):
-    for key, value in a.items():
-        if isinstance(value, dict):
-            node = b.setdefault(key, {})
-            merge_dicts_with_stdlib(value, node)
-        else:
-            b[key] = value
-    return b
 
 
 def main():
