@@ -166,6 +166,16 @@ class DataSourceVMwareGuestInfo(sources.DataSource):
         # host, including the network interfaces, default IP addresses,
         # etc.
         self.metadata = merge_dicts(self.metadata, host_info)
+        
+        # If the loaded metadata includes a platform key
+        # we use this is as self_platform otherwise it always
+        # defaults to dsname (see superclass property platform_type)
+        if self.metadata.get('platform', None) is not None:
+            # self._platform is not specifically referenced in superclass
+            # but mentioned this way in a comment so better safe than sorry
+            self._platform = self.metadata.get('platform')
+            # this one will be referenced by the superclass properties hasattr
+            self._platform_type = self.metadata.get('platform')     
 
         # Persist the instance data for versions of cloud-init that support
         # doing so. This occurs here rather than in the get_data call in
