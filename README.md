@@ -28,7 +28,7 @@ The data source is configured by setting `guestinfo` properties on a VM's `extra
 
 | Property | Description |
 |----------|-------------|
-| `guestinfo.metadata` | A JSON string containing the cloud-init metadata. |
+| `guestinfo.metadata` | A YAML document containing the cloud-init metadata. |
 | `guestinfo.metadata.encoding` | The encoding type for `guestinfo.metadata`. |
 | `guestinfo.userdata` | A YAML document containing the cloud-init user data. |
 | `guestinfo.userdata.encoding` | The encoding type for `guestinfo.userdata`. |
