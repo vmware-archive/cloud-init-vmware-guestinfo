@@ -22,6 +22,13 @@ The VMware GuestInfo datasource can be installed on any Linux distribution where
 curl -sSL https://raw.githubusercontent.com/vmware/cloud-init-vmware-guestinfo/master/install.sh | sh -
 ```
 
+To install a specific version, execute the following:
+
+```shell
+export GIT_REF=v1.4.1
+curl -sSL https://raw.githubusercontent.com/vmware/cloud-init-vmware-guestinfo/$GIT_REF/install.sh | sh -
+```
+
 ## Configuration
 
 The data source is configured by setting `guestinfo` properties on a VM's `extraconfig` data or a customizable vApp's `properties` data.
