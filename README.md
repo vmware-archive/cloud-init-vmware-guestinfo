@@ -25,8 +25,8 @@ curl -sSL https://raw.githubusercontent.com/vmware/cloud-init-vmware-guestinfo/m
 To install a specific version, execute the following:
 
 ```shell
-export GIT_REF=v1.4.1
-curl -sSL https://raw.githubusercontent.com/vmware/cloud-init-vmware-guestinfo/$GIT_REF/install.sh | sh -
+GIT_REF="v1.4.1" && \
+curl -sSL "https://raw.githubusercontent.com/vmware/cloud-init-vmware-guestinfo/${GIT_REF}/install.sh" | sh -
 ```
 
 ## Configuration
