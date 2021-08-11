@@ -4,13 +4,24 @@ This project provides a cloud-init datasource for pulling meta, user, and vendor
 
 ---
 
-❗❗ **This repository is being deprecated** ❗❗
+❗❗ **This repository is deprecated** ❗❗
 
-* The `DataSourceVMwareGuestInfo` will soon be available in cloud-init as `DataSourceVMware` ([canonical/cloud-init#953](https://github.com/canonical/cloud-init/pull/953)).
-* Anyone with build scripts or tooling that packages `DataSourceVMwareGuestInfo` into images should stop once there is a cloud-init release with the new `DataSourceVMware`.
-* Despite the name change, the datasource may still be activated and configured as before.
+This datasource has been merged into cloud-init as `DataSourceVMware` ([canonical/cloud-init#953](https://github.com/canonical/cloud-init/pull/953)):
 
-Please feel free to [file an issue](https://github.com/vmware/cloud-init-vmware-guestinfo/issues/new) with any questions. Thank you!
+| Component | Source | Tests |
+|---|---|---|
+| Datasource | [DataSourceVMware.py](https://github.com/canonical/cloud-init/blob/main/cloudinit/sources/DataSourceVMware.py) | [test_vmware.py](https://github.com/canonical/cloud-init/blob/main/tests/unittests/test_datasource/test_vmware.py) |
+| Identification | [ds-identify](https://github.com/canonical/cloud-init/blob/b9d308b4d61d22bacc05bcae59819755975631f8/tools/ds-identify#L1367-L1439) | [test_ds_identify.py](https://github.com/canonical/cloud-init/blob/b9d308b4d61d22bacc05bcae59819755975631f8/tests/unittests/test_ds_identify.py#L652-L694) |
+| Documentation | [vmware.rst](https://github.com/canonical/cloud-init/blob/main/doc/rtd/topics/datasources/vmware.rst) | |
+
+Despite the name change, the new datasource is backwards compatible with all configurations for the datasource in this repository. Still, anyone with build scripts or tooling that packages `DataSourceVMwareGuestInfo` into images should stop once cloud-init 21.3 is released with `DataSourceVMware`. In order to participate in the growth of this datasource moving forward, please:
+
+* Ask a question in the [``#cloud-init`` IRC channel on Libera](https://kiwiirc.com/nextclient/irc.libera.chat/cloud-init)
+* Search the cloud-init [mailing list archive](https://lists.launchpad.net/cloud-init/)
+* Join the [cloud-init mailing list](https://launchpad.net/~cloud-init)
+* Report issues with [Launchpad](https://bugs.launchpad.net/cloud-init/+filebug)
+
+Once again, many thanks to the wonderful community that has grown around this datasource, and I look forward to seeing everyone in the new cloud-init forums!
 
 ---
 
